@@ -40,6 +40,7 @@ library
                      Transient.Internals
                      Transient.Logged
                      Transient.Stream.Resource
+                     Transient.Utils
     exposed: True
     buildable: True
     exposed: True
