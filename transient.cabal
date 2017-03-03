@@ -1,17 +1,19 @@
 name: transient
 
+
 version: 0.5.1
 
 
 author: Alberto G. Corona
+maintainer: agocorona@gmail.com
 
 cabal-version: >=1.10
+
 build-type: Simple
 
 license: MIT
 license-file: LICENSE
 
-maintainer: agocorona@gmail.com
 homepage: http://www.fpcomplete.com/user/agocorona
 bug-reports: https://github.com/agocorona/transient/issues
 
@@ -19,6 +21,7 @@ synopsis: Making composable programs with multithreading, events and distributed
 description: See <http://github.com/agocorona/transient>
              In this release distributed primitives have been moved to the transient-universe package, and web primitives have been moved to the ghcjs-hplay package.
 category: Control
+
 data-dir: ""
 
 
@@ -46,7 +49,6 @@ library
     exposed: True
     default-language: Haskell2010
     hs-source-dirs: src .
-
 
 source-repository head
     type: git

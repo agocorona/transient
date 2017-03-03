@@ -1,9 +1,26 @@
-![](https://raw.githubusercontent.com/agocorona/transient/master/logo.png)
+![Transient logo](https://github.com/transient-haskell/transient/raw/master/logo.png)
+=========
+
+[![Hackage](https://img.shields.io/hackage/v/transient.svg)](http://hackage.haskell.org/package/transient)
+[![Stackage LTS](http://stackage.org/package/transient/badge/lts)](http://stackage.org/lts/package/transient)
+[![Stackage Nightly](http://stackage.org/package/transient/badge/nightly)](http://stackage.org/nightly/package/transient)
+[![Build Status](https://api.travis-ci.org/transient-haskell/transient.png?branch=master)](https://travis-ci.org/transient-haskell/transient)
+[![Gitter](https://badges.gitter.im/theam/haskell-do.svg)](https://gitter.im/Transient-Transient-Universe-HPlay/Lobby?utm_source=share-link&utm_medium=link&utm_campaign=share-link)
 
 NOTE: distributed computing and web primitives have been moved to [transient-universe](https://github.com/agocorona/transient-universe) and [ghcjs-hplay](https://github.com/agocorona/ghcjs-hplay)
 
-transient
-=========
+
+## Some feedback on `transient`:
+
+1. Rahul Muttineni @rahulmutt nov. 09 2016 03:40  Lead developper of ETA (the JVM Haskell compiler)
+
+   *It's a bit mind bending in that it's like using a higher-level list monad, but it's very, very cool. For beginning Haskellers, what would be really useful is a visualisation of what happens when you do various distributed/parallel stuff.* **It's almost shocking how effortlessly you can run computations across threads/nodes.**
+
+   *The cool part is the composability in the distributed setting. *You can make higher-order monadic functions that allow you to compose & reuse a long chain of distributed transactions via `wormhole` and `teleport`*. Another benefit is that the transaction becomes first class and* **you can see exactly what's going on in one place** *instead of distributing the logic across actors making the code equivalent to event callbacks, as you've stated.*
+
+  https://gitter.im/Transient-Transient-Universe-HPlay/Lobby?at=58228caa35e6cf054773303b
+
+## What is Transient?
 
 One of the biggest dreams of software engineering is unrestricted composability.
 
@@ -22,7 +39,7 @@ are possible if the types match, and generate new applications that are composab
 
 Transient does exactly that.
 
-The operators `<|>` and `<>` can be used for concurrency, the operator `<|>` can be used for parallelism and `>>=` for sequencing of threads and/or distributed processes. So even in the presence of these effects and others, everything is composable.
+The operators `<$>` `<*>` and `<>` express concurrency, the operator `<|>` express parallelism and `>>=` for sequencing of threads and/or distributed processes. So even in the presence of these effects and others, everything is composable.
 
 For this purpose transient is an extensible effects monad with all major effects and primitives for parallelism, events, asynchronous IO, early termination, non-determinism logging and distributed computing. Since it is possible to extend it with more effects without adding monad transformers, the composability is assured.
 

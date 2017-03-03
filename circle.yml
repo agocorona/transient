@@ -1,0 +1,31 @@
+machine:
+  environment:
+    GHC: 8.0.1
+    CABAL: 1.24
+    NODE: 6.9.1
+    ARGS: --stack-yaml stack-ghcjs.yaml
+    PATH: $HOME/.local/bin:$PATH
+
+dependencies:
+  cache_directories:
+    - ~/.ghc
+    - ~/.cabal
+    - ~/.stack
+    - ~/.ghcjs
+    - ~/.local/bin
+  pre:
+    - cabal update
+    - cabal install hsc2hs
+    - mkdir -p ~/.local/bin
+    - curl -L https://www.stackage.org/stack/linux-x86_64 \
+        | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
+    - nvm install $NODE
+  override:
+    - stack --no-terminal setup $ARGS
+
+test:
+  pre:
+    - stack --no-terminal $ARGS test --only-dependencies
+  override:
+    - stack --no-terminal test $ARGS
+    - stack --no-terminal haddock --no-haddock-deps $ARGS

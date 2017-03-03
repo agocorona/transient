@@ -26,15 +26,15 @@ matrix:
   include:
   # We grab the appropriate GHC and cabal-install versions from hvr's PPA. See:
   # https://github.com/hvr/multi-ghc-travis
-  - env: BUILD=cabal GHCVER=7.10.2 CABALVER=1.22
-    compiler: ": #GHC 7.10.2"
-    addons: {apt: {packages: [cabal-install-1.22,ghc-7.10.2], sources: [hvr-ghc]}}
-  - env: BUILD=cabal GHCVER=7.10.3 CABALVER=1.22
-    compiler: ": #GHC 7.10.3"
-    addons: {apt: {packages: [cabal-install-1.22,ghc-7.10.3], sources: [hvr-ghc]}}
   - env: BUILD=cabal GHCVER=8.0.1 CABALVER=1.24
     compiler: ": #GHC 8.0.1"
     addons: {apt: {packages: [cabal-install-1.24,ghc-8.0.1], sources: [hvr-ghc]}}
+  - env: BUILD=cabal GHCVER=7.10.3 CABALVER=1.22
+    compiler: ": #GHC 7.10.3"
+    addons: {apt: {packages: [cabal-install-1.22,ghc-7.10.3], sources: [hvr-ghc]}}
+  - env: BUILD=cabal GHCVER=7.10.2 CABALVER=1.22
+    compiler: ": #GHC 7.10.2"
+    addons: {apt: {packages: [cabal-install-1.22,ghc-7.10.2], sources: [hvr-ghc]}}
 
   # Build with the newest GHC and cabal-install. This is an accepted failure,
   # see below.
@@ -44,17 +44,18 @@ matrix:
 
   # The Stack builds. We can pass in arbitrary Stack arguments via the ARGS
   # variable, such as using --stack-yaml to point to a different file.
-  - env: BUILD=stack ARGS="--resolver lts-3"
-    compiler: ": #stack 7.10.2"
-    addons: {apt: {packages: [ghc-7.10.2], sources: [hvr-ghc]}}
-
-  - env: BUILD=stack ARGS="--resolver lts-5"
-    compiler: ": #stack 7.10.3 LTS 5"
-    addons: {apt: {packages: [ghc-7.10.3], sources: [hvr-ghc]}}
-
+  - env: BUILD=stack ARGS="--resolver lts-7"
+    compiler: ": #stack 8.0.1 LTS 7"
+    addons: {apt: {packages: [ghc-8.0.1], sources: [hvr-ghc]}}
   - env: BUILD=stack ARGS="--resolver lts-6"
     compiler: ": #stack 7.10.3 LTS 6"
     addons: {apt: {packages: [ghc-7.10.3], sources: [hvr-ghc]}}
+  - env: BUILD=stack ARGS="--resolver lts-5"
+    compiler: ": #stack 7.10.3 LTS 5"
+    addons: {apt: {packages: [ghc-7.10.3], sources: [hvr-ghc]}}
+  - env: BUILD=stack ARGS="--resolver lts-3"
+    compiler: ": #stack 7.10.2 LTS 3"
+    addons: {apt: {packages: [ghc-7.10.2], sources: [hvr-ghc]}}
 
   # Nightly builds are allowed to fail
   - env: BUILD=stack ARGS="--resolver nightly"
@@ -64,11 +65,11 @@ matrix:
   # GHCJS build via stack
   - env: BUILD=ghcjs ARGS="--stack-yaml=stack-ghcjs.yaml"
     compiler: ": #stack GHCJS"
-    addons: {apt: {packages: [ghc-7.10.3], sources: [hvr-ghc]}}
+    addons: {apt: {packages: [ghc-8.0.1], sources: [hvr-ghc]}}
 
   # Build on OS X in addition to Linux
-  - env: BUILD=stack ARGS="--resolver lts-6"
-    compiler: ": #stack 7.10.3 LTS 6 (OS X)"
+  - env: BUILD=stack ARGS="--resolver lts-7"
+    compiler: ": #stack 8.0.1 LTS 7 (OS X)"
     os: osx
 
   allow_failures:
@@ -80,6 +81,7 @@ before_install:
 # Using compiler above sets CC to an invalid value, so unset it
 - unset CC
 - export CASHER_TIME_OUT=600
+- if [ $BUILD = "ghcjs" ]; then nvm install 6; fi
 
 # We want to always allow newer versions of packages when building on GHC HEAD
 - CABALARGS=""
@@ -110,6 +112,7 @@ install:
       cabal install --only-dependencies --enable-tests --enable-benchmarks --force-reinstalls --ghc-options=-O0 --reorder-goals --max-backjumps=-1 $CABALARGS
       ;;
     ghcjs)
+      stack --no-terminal --install-ghc install hsc2hs
       stack --no-terminal setup $ARGS
       stack --no-terminal --install-ghc $ARGS test --only-dependencies
       ;;
