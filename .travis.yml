@@ -73,6 +73,7 @@ matrix:
     os: osx
 
   allow_failures:
+  - env: BUILD=ghcjs ARGS="--stack-yaml=stack-ghcjs.yaml"
   - env: BUILD=cabal GHCVER=head  CABALVER=head
   - env: BUILD=stack ARGS="--resolver nightly"
 

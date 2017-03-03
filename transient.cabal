@@ -1,6 +1,8 @@
 name: transient
 
-version: 0.4.4.1
+
+version: 0.5.1
+
 
 author: Alberto G. Corona
 maintainer: agocorona@gmail.com
@@ -32,6 +34,8 @@ library
                      , time
                      , directory
                      , random
+                     , bytestring
+
 
     exposed-modules: Transient.Backtrack
                      Transient.Base
@@ -39,7 +43,7 @@ library
                      Transient.Indeterminism
                      Transient.Internals
                      Transient.Logged
-                     Transient.Stream.Resource
+
     exposed: True
     buildable: True
     exposed: True

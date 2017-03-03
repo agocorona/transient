@@ -11,12 +11,19 @@
 -- |
 --
 -----------------------------------------------------------------------------
-{-# LANGUAGE  ExistentialQuantification, FlexibleInstances, ScopedTypeVariables, UndecidableInstances #-}
-module Transient.Logged(restore,checkpoint,suspend,logged,Loggable) where
+{-# LANGUAGE  CPP,ExistentialQuantification, FlexibleInstances, ScopedTypeVariables, UndecidableInstances #-}
+module Transient.Logged(
+
+#ifndef ghcjs_HOST_OS
+restore,checkpoint,suspend,
+#endif
+
+logged, received,param, Loggable) where
 
 import Data.Typeable
 import Unsafe.Coerce
 import Transient.Base
+import Transient.Internals(Loggable)
 import Transient.Indeterminism(choose)
 import Transient.Internals(onNothing,reads1,IDynamic(..),Log(..),LogElem(..),RemoteStatus(..),StateIO)
 import Control.Applicative
@@ -24,12 +31,16 @@ import Control.Monad.IO.Class
 import System.Directory
 import Control.Exception
 import Control.Monad
+
+
+
+#ifndef ghcjs_HOST_OS
 import System.Random
+#endif
 
 
-class (Show a, Read a,Typeable a) => Loggable a
-instance (Show a, Read a,Typeable a) => Loggable a
 
+#ifndef ghcjs_HOST_OS
 logs= "logs/"
 
 -- re-excutes all the threads whose state has been logged in the "./logs" folder
@@ -97,22 +108,19 @@ logAll log= do
         liftIO $ writeFile newlogfile $ show log
       :: TransIO ()
 
+#endif
 
 
-
-
-fromIDyn :: (Read a, Show a, Typeable a) => IDynamic -> a
+fromIDyn :: Loggable a => IDynamic -> a
 fromIDyn (IDynamic x)=r where r= unsafeCoerce x     -- !> "coerce" ++ " to type "++ show (typeOf r)
 
 fromIDyn (IDyns s)=r `seq`r where r= read s         -- !> "read " ++ s ++ " to type "++ show (typeOf r)
 
+
+
 toIDyn x= IDynamic x
 
-{- TODO add save/recover from log
-rerun :: Log -> TransIO a -> TransIO a
 
-getLog :: TransIO Log
--}
 
 -- | write the result of the computation in  the log and return it.
 -- but if there is data in the internal log, it read the data from the log and
@@ -137,18 +145,19 @@ logged :: Loggable a => TransientIO a -> TransientIO a
 logged mx =  Transient $ do
    Log recover rs full <- getData `onNothing` return ( Log False  [][])
    runTrans $
-    case (recover ,rs) of        -- !> ("logged enter",recover,rs) of
+    case (recover ,rs)   of                               --    !> ("logged enter",recover,rs) of
       (True, Var x: rs') -> do
             setData $ Log True rs' full
             return $ fromIDyn x
---                                   !> ("read in Var:", x)
+--                                                  !> ("Var:", x)
 
       (True, Exec:rs') -> do
             setData $ Log True  rs' full
-            mx                                  -- !> "Exec"
+            mx
+--                                                  !> "Exec"
 
       (True, Wait:rs') -> do
-            setData (Log True  rs' full)        -- !> "Wait"
+            setData (Log True  rs' full)          -- !> "Wait"
             empty
 
       _ -> do
@@ -177,3 +186,42 @@ logged mx =  Transient $ do
 
 
 
+
+-------- parsing the log for API's
+
+received :: Loggable a => a -> TransIO ()
+received n=Transient $ do
+   Log recover rs full <- getData `onNothing` return ( Log False  [][])
+   case rs of
+     [] -> return Nothing
+     Var (IDyns s):t -> if s == show1 n
+          then  do
+            setData $ Log recover t full
+            return $ Just ()
+          else return Nothing
+     _  -> return Nothing
+   where
+   show1 x= if typeOf x == typeOf "" then unsafeCoerce x else show x
+
+param :: Loggable a => TransIO a
+param= res where
+ res= Transient $ do
+   Log recover rs full <- getData `onNothing` return ( Log False  [][])
+   case rs of
+     [] -> return Nothing
+     Var (IDynamic v):t ->do
+           setData $ Log recover t full
+           return $ cast v
+     Var (IDyns s):t -> do
+       let mr = reads1  s `asTypeOf` type1 res
+
+       case mr of
+          [] -> return Nothing
+          (v,r):_ -> do
+              setData $ Log recover t full
+              return $ Just v
+     _ -> return Nothing
+
+   where
+   type1 :: TransIO a -> [(a,String)]
+   type1= error "type1: typelevel"

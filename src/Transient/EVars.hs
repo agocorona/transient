@@ -42,14 +42,12 @@ data EVar a= EVar  (TChan (StreamData a)) deriving  Typeable
 
 newEVar ::  TransIO (EVar a)
 newEVar  = Transient $ do
-   id <- genId
    ref <-liftIO  newBroadcastTChanIO
    return . Just $ EVar  ref
 
 -- | delete al the subscriptions for an evar.
 cleanEVar :: EVar a -> TransIO ()
-cleanEVar (EVar  ref1)= liftIO $ atomically $ do
-    writeTChan  ref1 SDone
+cleanEVar (EVar  ref1)= liftIO $ atomically $  writeTChan  ref1 SDone
 
 
 -- | read the EVar. It only succeed when the EVar is being updated
