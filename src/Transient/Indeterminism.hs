@@ -11,7 +11,9 @@
 -- | see <https://www.fpcomplete.com/user/agocorona/beautiful-parallel-non-determinism-transient-effects-iii>
 --
 -----------------------------------------------------------------------------
-{-# LANGUAGE  ScopedTypeVariables #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE FlexibleContexts    #-}
+
 module Transient.Indeterminism (
 choose, choose', collect, collect', group, groupByTime
 ) where
@@ -24,6 +26,7 @@ import Data.Monoid
 import Control.Concurrent
 import Data.Typeable
 import Control.Monad.State
+import Control.Monad.Trans.Control (MonadBaseControl)
 import GHC.Conc
 import Data.Time.Clock
 import Control.Exception
@@ -32,7 +35,7 @@ import Control.Exception
 -- | Converts a list of pure values into a transient task set. You can use the
 -- 'threads' primitive to control the parallelism.
 --
-choose  :: Show a =>  [a] -> TransIO a
+choose :: (MonadIO m, MonadBaseControl IO m, Show a) =>  [a] -> AsyncT m a
 choose []= empty
 choose   xs = do
     evs <- liftIO $ newIORef xs
@@ -46,13 +49,13 @@ choose   xs = do
 -- | Same as 'choose' except that the 'threads' combinator cannot be used,
 -- instead the parent thread's limit applies.
 --
-choose' :: [a] -> TransIO a
+choose' :: (MonadIO m, MonadBaseControl IO m) => [a] -> AsyncT m a
 choose' xs = foldl (<|>) empty $ map (async . return) xs
 
 
 -- | Collect the results of a task set in groups of @n@ elements.
 --
-group :: Int -> TransIO a -> TransIO [a]
+group :: MonadIO m => Int -> AsyncT m a -> AsyncT m [a]
 group num proc =  do
     v <- liftIO $ newIORef (0,[])
     x <- proc
@@ -70,7 +73,7 @@ group num proc =  do
 -- | Collect the results of a task set, grouping all results received within
 -- every time interval specified by the first parameter as `diffUTCTime`.
 --
-groupByTime :: Integer -> TransIO a -> TransIO [a]
+groupByTime :: MonadIO m => Integer -> AsyncT m a -> AsyncT m [a]
 
 groupByTime time proc =  do
     v  <- liftIO $ newIORef (0,[])
@@ -99,7 +102,8 @@ groupByTime time proc =  do
 -- returning the results.  Results are returned in the thread where 'collect'
 -- is called.
 --
-collect ::  Int -> TransIO a -> TransIO [a]
+collect ::  (MonadIO m, MonadBaseControl IO m)
+    => Int -> AsyncT m a -> AsyncT m [a]
 collect n = collect' n 0
 
 -- | Like 'collect' but with a timeout. When the timeout is zero it behaves
@@ -107,7 +111,8 @@ collect n = collect' n 0
 -- collection stops after the timeout and the results collected till now are
 -- returned.
 --
-collect' :: Int -> Int -> TransIO a -> TransIO [a]
+collect' :: (MonadIO m, MonadBaseControl IO m)
+    => Int -> Int -> AsyncT m a -> AsyncT m [a]
 collect' n t search= do
 
   rv <- liftIO $ newEmptyMVar     -- !> "NEWMVAR"

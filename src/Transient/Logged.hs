@@ -36,6 +36,9 @@
 -- @
 -----------------------------------------------------------------------------
 {-# LANGUAGE  CPP,ExistentialQuantification, FlexibleInstances, ScopedTypeVariables, UndecidableInstances #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE PatternSynonyms  #-}
+
 module Transient.Logged(
 Loggable, logged, received, param
 
@@ -47,14 +50,15 @@ Loggable, logged, received, param
 import Data.Typeable
 import Unsafe.Coerce
 import Transient.Base
-import Transient.Internals(Loggable)
+import Transient.Internals(Loggable, pattern Transient)
 import Transient.Indeterminism(choose)
-import Transient.Internals(onNothing,reads1,IDynamic(..),Log(..),LogElem(..),RemoteStatus(..),StateIO)
+import Transient.Internals(AsyncT(..), onNothing,reads1,IDynamic(..),Log(..),LogElem(..),RemoteStatus(..))
 import Control.Applicative
 import Control.Monad.IO.Class
 import System.Directory
 import Control.Exception
 import Control.Monad
+import Control.Monad.Trans.Control (MonadBaseControl)
 
 
 
@@ -71,7 +75,7 @@ logs= "logs/"
 -- directory, restores the state of the computation from the logs, and runs the
 -- computation.  The log files are removed after the state has been restored.
 --
-restore :: TransIO a -> TransIO a
+restore :: (MonadIO m, MonadBaseControl IO m) => AsyncT m a -> AsyncT m a
 restore   proc= do
      liftIO $ createDirectory logs  `catch` (\(e :: SomeException) -> return ())
      list <- liftIO $ getDirectoryContents logs
@@ -101,7 +105,7 @@ restore   proc= do
 -- subdirectory of the current directory. Each thread's log is saved in a
 -- separate file.
 --
-suspend :: Typeable a => a -> TransIO a
+suspend :: (MonadIO m, MonadBaseControl IO m, Typeable a) => a -> AsyncT m a
 suspend  x= do
    Log recovery _ log <- getData `onNothing` return (Log False [] [])
    if recovery then return x else do
@@ -110,16 +114,16 @@ suspend  x= do
 
 -- | Saves the accumulated logs of the current computation, like 'suspend', but
 -- does not exit.
-checkpoint ::  TransIO ()
+checkpoint :: (MonadIO m, MonadBaseControl IO m) => AsyncT m ()
 checkpoint = do
    Log recovery _ log <- getData `onNothing` return (Log False [] [])
    if recovery then return () else logAll log
 
 
+logAll :: (MonadIO m, MonadBaseControl IO m) => [LogElem] -> AsyncT m ()
 logAll log= do
         newlogfile <- liftIO $  (logs ++) <$> replicateM 7 (randomRIO ('a','z'))
         liftIO $ writeFile newlogfile $ show log
-      :: TransIO ()
 
 #endif
 
@@ -144,7 +148,7 @@ toIDyn x= IDynamic x
 -- the parent computation is finished its internal (subcomputation) logs are
 -- discarded.
 --
-logged :: Loggable a => TransientIO a -> TransientIO a
+logged :: (MonadIO m, Loggable a) => AsyncT m a -> AsyncT m a
 logged mx =  Transient $ do
    Log recover rs full <- getData `onNothing` return ( Log False  [][])
    runTrans $

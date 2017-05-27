@@ -32,9 +32,12 @@ library
                      , bytestring    >= 0.10.6
 
                      -- libraries not bundled w/ GHC
+                     , lifted-base
+                     , monad-control
                      , mtl
                      , stm
                      , random
+                     , transformers-base
 
     exposed-modules: Transient.Backtrack
                      Transient.Base
