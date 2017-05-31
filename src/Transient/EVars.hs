@@ -1,8 +1,10 @@
 {-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE PatternSynonyms    #-}
+
 module Transient.EVars where
 
 import Transient.Base
-import Transient.Internals(runTransState,onNothing, EventF(..), killChildren)
+import Transient.Internals (pattern Transient, runTransState,onNothing, EventF(..), killChildren)
 import qualified Data.Map as M
 import Data.Typeable
 
