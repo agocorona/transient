@@ -14,7 +14,7 @@ NOTE: distributed computing and web primitives Are in [transient-universe](https
 
 ## Some feedback on `transient`:
 
-1. Rahul Muttineni @rahulmutt nov. 09 2016 03:40  Lead developper of ETA (the JVM Haskell compiler)
+1. Rahul Muttineni @rahulmutt nov. 09 2016 03:40  Lead developer of ETA (the JVM Haskell compiler)
 
    *It's a bit mind bending in that it's like using a higher-level list monad, but it's very, very cool. For beginning Haskellers, what would be really useful is a visualisation of what happens when you do various distributed/parallel stuff.* **It's almost shocking how effortlessly you can run computations across threads/nodes.**
 
